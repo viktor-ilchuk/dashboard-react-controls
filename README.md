@@ -1,2 +1,1 @@
-# dashboard-react-controls
-dashboard react controls
+# ui-controls for react
