@@ -76,7 +76,7 @@
     "eject": "react-scripts eject",
     "build-storybook": "build-storybook",
     "storybook": "start-storybook -p 6006",
-    "compile": "npm rm -rf dist/* && babel src/lib --out-dir dist --copy-files --no-copy-ignored --ignore src/**/*.stories.js"
+    "compile": "rm -rf dist/* && babel src/lib --out-dir dist --copy-files --no-copy-ignored --ignore src/**/*.stories.js"
   },
   "eslintConfig": {
     "extends": [
