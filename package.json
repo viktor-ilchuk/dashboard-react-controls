@@ -1,12 +1,23 @@
 {
   "name": "dashboard-react-controls",
   "version": "0.0.1",
+  "description": "Collection of resources (such as CSS styles, fonts and images) and ReactJS 17.x components to share among different Iguazio React repos.",
   "main": "dist/index.js",
   "module": "dist/index.js",
   "files": [
     "dist",
     "README.md"
   ],
+    "repository": {
+        "type": "git",
+        "url": "git@github.com:iguazio/dashboard-react-controls.git"
+    },
+    "keywords": [
+        "Iguazio",
+        "iguazio",
+        "MLRun",
+        "mlrun"
+    ],
   "peerDependencies": {
     "classnames": "*",
     "lodash": "*",
