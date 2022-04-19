@@ -8,16 +8,16 @@
     "dist",
     "README.md"
   ],
-    "repository": {
-        "type": "git",
-        "url": "git@github.com:iguazio/dashboard-react-controls.git"
-    },
-    "keywords": [
-        "Iguazio",
-        "iguazio",
-        "MLRun",
-        "mlrun"
-    ],
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:iguazio/dashboard-react-controls.git"
+  },
+  "keywords": [
+    "Iguazio",
+    "iguazio",
+    "MLRun",
+    "mlrun"
+  ],
   "peerDependencies": {
     "classnames": "*",
     "lodash": "*",
@@ -76,7 +76,7 @@
     "eject": "react-scripts eject",
     "build-storybook": "build-storybook",
     "storybook": "start-storybook -p 6006",
-    "compile": "rm -rf dist/* && babel src/lib --out-dir dist --copy-files --no-copy-ignored --ignore src/**/*.stories.js"
+    "compile": "npm rm -rf dist/* && babel src/lib --out-dir dist --copy-files --no-copy-ignored --ignore src/**/*.stories.js"
   },
   "eslintConfig": {
     "extends": [
@@ -95,5 +95,6 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
-  }
+  },
+  "dependencies": {}
 }
