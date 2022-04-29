@@ -1,4 +1,5 @@
 import PropTypes from 'prop-types'
+
 import {
   DANGER_BUTTON,
   LABEL_BUTTON,
