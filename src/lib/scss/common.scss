@@ -1,3 +1,5 @@
+@import './colors';
+
 #root {
   z-index: 1;
   display: flex;
@@ -33,6 +35,32 @@ button {
 
   &:disabled {
     cursor: not-allowed;
+  }
+}
+
+input,
+textarea {
+  overflow-x: hidden;
+  font-weight: normal;
+  font-size: 15px;
+  font-family: Roboto, sans-serif;
+  font-style: normal;
+  line-height: 18px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+
+  &:active,
+  &:focus {
+    outline: none;
+    box-shadow: none;
+  }
+}
+
+.link {
+  color: $cornflowerBlue;
+
+  &:hover {
+    text-decoration: underline;
   }
 }
 

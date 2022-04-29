@@ -10,5 +10,8 @@
         "runtime": "automatic"
       }
     ]
+  ],
+  "ignore": [
+    "node_modules"
   ]
 }
