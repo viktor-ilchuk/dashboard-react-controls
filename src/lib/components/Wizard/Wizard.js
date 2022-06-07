@@ -1,6 +1,5 @@
 import React, { useMemo, useState } from 'react'
 import PropTypes from 'prop-types'
-import { Form } from 'react-final-form'
 import classNames from 'classnames'
 
 import Button from '../Button/Button'
@@ -18,7 +17,7 @@ const Wizard = ({
   children,
   className,
   confirmClose,
-  initialValues,
+  FormState,
   isWizardOpen,
   onWizardResolve,
   onWizardSubmit,
@@ -61,7 +60,7 @@ const Wizard = ({
     return setActiveStepNumber(idx)
   }
 
-  const handleOnClose = (FormState) => {
+  const handleOnClose = () => {
     if (confirmClose && FormState && FormState.dirty) {
       openPopUp(ConfirmDialog, {
         cancelButton: {
@@ -81,15 +80,18 @@ const Wizard = ({
     }
   }
 
-  const handleSubmit = (values) => {
-    if (isLastStep) {
-      onWizardSubmit(values)
-    } else {
-      goToNextStep()
+  const handleSubmit = () => {
+    FormState.handleSubmit()
+    if (FormState.valid) {
+      if (isLastStep) {
+        onWizardSubmit(FormState.values)
+      } else {
+        goToNextStep()
+      }
     }
   }
 
-  const getDefaultActions = (FormState) => {
+  const getDefaultActions = () => {
     if (hasSteps) {
       return [
         <Button
@@ -99,8 +101,8 @@ const Wizard = ({
           type="button"
         />,
         <Button
-          onClick={FormState.handleSubmit}
-          disabled={FormState.submitting}
+          onClick={handleSubmit}
+          disabled={FormState.submitting || (FormState.invalid && FormState.submitFailed)}
           label={isLastStep ? submitButtonLabel : 'Next'}
           type="button"
           variant={SECONDARY_BUTTON}
@@ -108,10 +110,10 @@ const Wizard = ({
       ]
     } else {
       return [
-        <Button onClick={() => handleOnClose(FormState)} label="Cancel" type="button" />,
+        <Button onClick={handleOnClose} label="Cancel" type="button" />,
         <Button
-          onClick={FormState.handleSubmit}
-          disabled={FormState.submitting}
+          onClick={handleSubmit}
+          disabled={FormState.submitting || (FormState.invalid && FormState.submitFailed)}
           label={submitButtonLabel}
           type="button"
           variant={SECONDARY_BUTTON}
@@ -120,55 +122,46 @@ const Wizard = ({
     }
   }
 
-  const renderModalActions = (FormState) => {
+  const renderModalActions = () => {
     if (stepsConfig[activeStepNumber]?.getActions) {
       return stepsConfig[activeStepNumber]
         .getActions({
           FormState,
           goToNextStep,
           goToPreviousStep,
-          handleOnClose: () => handleOnClose(FormState)
+          handleOnClose,
+          handleSubmit
         })
         .map((action) => <Button {...action} />)
     } else {
-      return getDefaultActions(FormState)
+      return getDefaultActions()
     }
   }
 
   return (
-    <>
-      <Form initialValues={initialValues} onSubmit={handleSubmit}>
-        {(FormState) => (
-          <Modal
-            actions={renderModalActions(FormState)}
-            className={wizardClasses}
-            onClose={() => handleOnClose(FormState)}
-            show={isWizardOpen}
-            size={size}
-            title={title}
-          >
-            {hasSteps && (
-              <WizardSteps
-                activeStepNumber={activeStepNumber}
-                jumpToStep={jumpToStep}
-                steps={stepsMenu}
-              />
-            )}
-            <div className="wizard-form__content">
-              {activeStepTemplate}
-              <pre>{JSON.stringify(FormState, null, 2)}</pre>
-            </div>
-          </Modal>
-        )}
-      </Form>
-    </>
+    <Modal
+      actions={renderModalActions()}
+      className={wizardClasses}
+      onClose={handleOnClose}
+      show={isWizardOpen}
+      size={size}
+      title={title}
+    >
+      {hasSteps && (
+        <WizardSteps
+          activeStepNumber={activeStepNumber}
+          jumpToStep={jumpToStep}
+          steps={stepsMenu}
+        />
+      )}
+      <div className="wizard-form__content">{activeStepTemplate}</div>
+    </Modal>
   )
 }
 
 Wizard.defaultProps = {
   className: '',
   confirmClose: false,
-  initialValues: {},
   size: MODAL_MD,
   stepsConfig: [],
   submitButtonLabel: 'Submit'
@@ -177,7 +170,7 @@ Wizard.defaultProps = {
 Wizard.propsTypes = {
   className: PropTypes.string,
   confirmClose: PropTypes.bool,
-  initialValues: PropTypes.object,
+  FormState: PropTypes.object.isRequired,
   isOpen: PropTypes.bool.isRequired,
   onResolve: PropTypes.func.isRequired,
   onSubmit: PropTypes.func.isRequired,

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import PropTypes from 'prop-types'
-import classnames from 'classnames'
+import classNames from 'classnames'
 import { isEmpty } from 'lodash'
 import { Field, useField } from 'react-final-form'
 
@@ -40,7 +40,7 @@ const FormInput = React.forwardRef(
       required,
       suggestionList,
       tip,
-      validationRules,
+      validationRules: rules,
       validator,
       withoutBorder,
       ...inputProps
@@ -52,21 +52,24 @@ const FormInput = React.forwardRef(
     const [isFocused, setIsFocused] = useState(false)
     const [typedValue, setTypedValue] = useState('')
     const [validationPattern] = useState(RegExp(pattern))
+    const [validationRules, setValidationRules] = useState(rules)
     const [showValidationRules, setShowValidationRules] = useState(false)
     const wrapperRef = useRef()
     ref ??= wrapperRef
     const inputRef = useRef()
     useDetectOutsideClick(ref, () => setShowValidationRules(false))
 
-    const inputClassNames = classnames(
-      'form-field__input',
-      className,
-      `form-field__input-${density}`,
-      isInvalid && 'form-field__input-invalid',
-      // isInvalid && 'input_rules-invalid',
+    const formFieldClassNames = classNames('form-field', className)
+
+    const inputWrapperClassNames = classNames(
+      'form-field__wrapper',
+      `form-field__wrapper-${density}`,
+      disabled && 'form-field__wrapper-disabled',
+      isInvalid && 'form-field__wrapper-invalid',
       withoutBorder && 'without-border'
     )
-    const labelClassNames = classnames(
+
+    const labelClassNames = classNames(
       'form-field__label',
       disabled && 'form-field__label-disabled'
     )
@@ -96,8 +99,8 @@ const FormInput = React.forwardRef(
       }
     }, [focused])
 
-    const getValidationRules = (rules) => {
-      return rules.map(({ isValid = false, label, name }) => {
+    const getValidationRules = () => {
+      return validationRules.map(({ isValid = false, label, name }) => {
         return <ValidationTemplate valid={isValid} validationMessage={label} key={name} />
       })
     }
@@ -105,7 +108,7 @@ const FormInput = React.forwardRef(
     const handleInputBlur = (event) => {
       input.onBlur(event)
 
-      if (!event.relatedTarget || !event.relatedTarget?.closest('.suggestion-list')) {
+      if (!event.relatedTarget || !event.relatedTarget?.closest('.form-field__suggestion-list')) {
         setIsFocused(false)
         onBlur && onBlur(event)
       }
@@ -141,15 +144,28 @@ const FormInput = React.forwardRef(
       setShowValidationRules(!showValidationRules)
     }
 
+    useEffect(() => {
+      setValidationRules((prevState) =>
+        prevState.map((rule) => ({
+          ...rule,
+          isValid:
+            !meta.error || !Array.isArray(meta.error)
+              ? true
+              : !meta.error.some((err) => err.name === rule.name)
+        }))
+      )
+    }, [meta.error])
+
     const validateField = (value) => {
       const valueToValidate = value ?? ''
       let validationError = null
 
-      if (!isEmpty(validationRules)) {
-        const [newRules, isValidField] = checkPatternsValidity(validationRules, valueToValidate)
+      if (!isEmpty(validationRules) && valueToValidate !== typedValue) {
+        const [newRules, isValidField] = checkPatternsValidity(rules, valueToValidate)
+        const invalidRules = newRules.filter((rule) => !rule.isValid)
 
         if (!isValidField) {
-          validationError = newRules
+          validationError = invalidRules.map((rule) => ({ name: rule.name, label: rule.label }))
         }
 
         if ((isValidField && showValidationRules) || (required && valueToValidate === '')) {
@@ -170,13 +186,14 @@ const FormInput = React.forwardRef(
       if (!validationError && validator) {
         validationError = validator(value)
       }
+
       return validationError
     }
 
     return (
       <Field validate={validateField} name={name}>
         {({ input, meta }) => (
-          <div ref={ref} className="form-field">
+          <div ref={ref} className={formFieldClassNames}>
             {label && (
               <div className={labelClassNames}>
                 <label data-testid="label" htmlFor={input.name}>
@@ -201,24 +218,25 @@ const FormInput = React.forwardRef(
                 )}
               </div>
             )}
-            <div className="form-field__wrapper">
-              <input
-                data-testid="input"
-                id={input.name}
-                className={inputClassNames}
-                ref={inputRef}
-                required={isInvalid}
-                {...{
-                  disabled,
-                  pattern,
-                  ...inputProps,
-                  ...input
-                }}
-                autoComplete={inputProps.autocomplete ?? 'off'}
-                onChange={handleInputChange}
-                onBlur={handleInputBlur}
-                onFocus={handleInputFocus}
-              />
+            <div className={inputWrapperClassNames}>
+              <div className="form-field__control">
+                <input
+                  data-testid="input"
+                  id={input.name}
+                  ref={inputRef}
+                  required={isInvalid || required}
+                  {...{
+                    disabled,
+                    pattern,
+                    ...inputProps,
+                    ...input
+                  }}
+                  autoComplete={inputProps.autocomplete ?? 'off'}
+                  onChange={handleInputChange}
+                  onBlur={handleInputBlur}
+                  onFocus={handleInputFocus}
+                />
+              </div>
               <div className="form-field__icons">
                 {isInvalid && !Array.isArray(meta.error) && (
                   <Tooltip
@@ -230,10 +248,10 @@ const FormInput = React.forwardRef(
                     <InvalidIcon />
                   </Tooltip>
                 )}
-                {isInvalid && Array.isArray(meta.error) && !isEmpty(meta.error) && (
-                  <i className="form-field__warning" onClick={toggleValidationRulesMenu}>
+                {isInvalid && Array.isArray(meta.error) && (
+                  <button className="form-field__warning" onClick={toggleValidationRulesMenu}>
                     <WarningIcon />
-                  </i>
+                  </button>
                 )}
                 {tip && <Tip text={tip} className="form-field__tip" />}
                 {inputIcon && (
@@ -244,7 +262,7 @@ const FormInput = React.forwardRef(
               </div>
             </div>
             {suggestionList?.length > 0 && isFocused && (
-              <ul className="suggestion-list">
+              <ul className="form-field__suggestion-list">
                 {suggestionList.map((item, index) => {
                   return (
                     <li
@@ -264,9 +282,9 @@ const FormInput = React.forwardRef(
                 })}
               </ul>
             )}
-            {isInvalid && Array.isArray(meta.error) && !isEmpty(meta.error) && (
-              <OptionsMenu show={showValidationRules} parentElement={ref}>
-                {getValidationRules(meta.error)}
+            {!isEmpty(validationRules) && (
+              <OptionsMenu show={showValidationRules} ref={ref}>
+                {getValidationRules()}
               </OptionsMenu>
             )}
           </div>
