@@ -145,7 +145,7 @@ const FormSelect = ({
         <div
           data-testid="select"
           ref={selectRef}
-          className={`form-field ${className}`}
+          className={`form-field form-field-select ${className}`}
           onClick={toggleOpen}
         >
           {label && (
@@ -227,7 +227,7 @@ const FormSelect = ({
           )}
           {isOpen && (
             <PopUpDialog
-              className="form-field__select__options-list"
+              className="form-field form-field-select__options-list"
               customPosition={{
                 element: selectRef,
                 position: 'bottom-right'

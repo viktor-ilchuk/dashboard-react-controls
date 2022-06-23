@@ -59,7 +59,7 @@ const FormInput = React.forwardRef(
     const inputRef = useRef()
     useDetectOutsideClick(ref, () => setShowValidationRules(false))
 
-    const formFieldClassNames = classNames('form-field', className)
+    const formFieldClassNames = classNames('form-field form-field-input', className)
 
     const inputWrapperClassNames = classNames(
       'form-field__wrapper',
