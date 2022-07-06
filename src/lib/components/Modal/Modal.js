@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react'
 import PropTypes from 'prop-types'
-import { createPortal } from 'react-dom'
 import { CSSTransition } from 'react-transition-group'
 import classNames from 'classnames'
 
@@ -14,7 +13,7 @@ import { ReactComponent as CloseIcon } from '../../images/close.svg'
 
 import './Modal.scss'
 
-const JSX_MODAL = ({ actions, children, className, location, onClose, size, show, title }) => {
+const Modal = ({ actions, children, className, location, onClose, size, show, title }) => {
   const [currentLocation, setCurrentLocation] = useState(location)
   const modalClassNames = classNames('modal', className, size && `modal-${size}`)
 
@@ -58,9 +57,6 @@ const JSX_MODAL = ({ actions, children, className, location, onClose, size, show
     </>
   )
 }
-
-const Modal = (props) =>
-  createPortal(<JSX_MODAL {...props} />, document.getElementById('overlay_container'))
 
 Modal.defaultProps = {
   actions: [],
