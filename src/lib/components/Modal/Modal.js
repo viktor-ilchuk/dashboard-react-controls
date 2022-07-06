@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import PropTypes from 'prop-types'
 import { createPortal } from 'react-dom'
 import { CSSTransition } from 'react-transition-group'
@@ -14,8 +14,20 @@ import { ReactComponent as CloseIcon } from '../../images/close.svg'
 
 import './Modal.scss'
 
-const JSX_MODAL = ({ actions, children, className, onClose, size, show, title }) => {
+const JSX_MODAL = ({ actions, children, className, location, onClose, size, show, title }) => {
+  const [currentLocation, setCurrentLocation] = useState(location)
   const modalClassNames = classNames('modal', className, size && `modal-${size}`)
+
+  useEffect(() => {
+    setCurrentLocation(location)
+
+    return () => {
+      if (location !== currentLocation) {
+        onClose()
+      }
+    }
+  }, [currentLocation, location, onClose])
+
   return (
     <>
       <Backdrop onClose={onClose} show={show} />
@@ -65,6 +77,7 @@ Modal.propTypes = {
     PropTypes.node,
     PropTypes.string
   ]).isRequired,
+  location: PropTypes.string.isRequired,
   onClose: PropTypes.func.isRequired,
   show: PropTypes.bool.isRequired,
   size: MODAL_SIZES,
