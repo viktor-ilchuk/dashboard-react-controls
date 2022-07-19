@@ -47,14 +47,11 @@
 
       &-value {
         display: block;
-        overflow: hidden;
-        white-space: nowrap;
-        text-overflow: ellipsis;
       }
 
       &-sub_label {
         display: block;
-        margin-left: 5px;
+        margin-left: 10px;
         overflow: hidden;
         color: $topaz;
         white-space: nowrap;
