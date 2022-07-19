@@ -1,42 +1,43 @@
 import React from 'react'
 import PropTypes from 'prop-types'
-
-import { ReactComponent as UnCheckBox } from '../../images/checkbox-unchecked.svg'
-import { ReactComponent as Checkbox } from '../../images/checkbox-checked.svg'
+import { Field } from 'react-final-form'
+import classNames from 'classnames'
 
 import './formCheckBox.scss'
 
-const FormCheckBox = ({ children, className, item, onChange, selectedId }) => {
+const FormCheckBox = ({ children, className, name, label, ...inputProps }) => {
+  const formFieldClassNames = classNames('form-field-checkbox', className)
+
   return (
-    <span
-      className={`checkbox ${className}`}
-      onClick={() => {
-        onChange(item.id)
-      }}
-    >
-      {item.id === selectedId ? (
-        <Checkbox className="checked" />
-      ) : (
-        <UnCheckBox className="unchecked" />
+    <Field name={name} value={inputProps.value} type="checkbox">
+      {({ input }) => (
+        <div className={formFieldClassNames}>
+          <input
+            {...{
+              ...input,
+              ...inputProps
+            }}
+            id={inputProps.value ?? name}
+          />
+          <label htmlFor={inputProps.value ?? name}>
+            {label ? label : ''}
+            {children}
+          </label>
+        </div>
       )}
-      {children || item.label}
-    </span>
+    </Field>
   )
 }
 
 FormCheckBox.defaultProps = {
   className: '',
-  selectedId: ''
+  label: ''
 }
 
 FormCheckBox.propTypes = {
   className: PropTypes.string,
-  item: PropTypes.shape({
-    id: PropTypes.string.isRequired,
-    label: PropTypes.string
-  }).isRequired,
-  onChange: PropTypes.func.isRequired,
-  selectedId: PropTypes.string
+  name: PropTypes.string.isRequired,
+  label: PropTypes.string
 }
 
 export default React.memo(FormCheckBox)
