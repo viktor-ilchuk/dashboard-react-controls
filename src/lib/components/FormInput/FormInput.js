@@ -144,7 +144,7 @@ const FormInput = React.forwardRef(
 
     const toggleValidationRulesMenu = () => {
       inputRef.current.focus()
-      setShowValidationRules(!showValidationRules)
+      setShowValidationRules((state) => !state)
     }
 
     useEffect(() => {
