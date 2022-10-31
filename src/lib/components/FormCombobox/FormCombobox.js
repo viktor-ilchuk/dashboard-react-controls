@@ -79,6 +79,10 @@ const FormCombobox = ({
   useDetectOutsideClick(comboboxRef, () => setShowValidationRules(false))
 
   const labelClassNames = classnames('form-field__label', disabled && 'form-field__label-disabled')
+  const inputClassNames = classnames(
+    'form-field-combobox__input',
+    selectValue.id.length === 0 && 'form-field-combobox__input_hidden'
+  )
 
   useEffect(() => {
     setValidationRules((prevState) =>
@@ -346,8 +350,7 @@ const FormCombobox = ({
               )}
             </div>
             <input
-              className="form-field-combobox__input form-field__control"
-              disabled={selectValue.id.length === 0}
+              className={inputClassNames}
               onChange={handleInputChange}
               onFocus={inputOnFocus}
               placeholder={inputPlaceholder}
