@@ -112,12 +112,7 @@ const FormCombobox = ({
 
   const handleOutsideClick = useCallback(
     (event) => {
-      if (
-        comboboxRef.current &&
-        !comboboxRef.current.contains(event.target) &&
-        suggestionListRef.current &&
-        !suggestionListRef.current.contains(event.target)
-      ) {
+      if (comboboxRef.current && !comboboxRef.current.contains(event.target)) {
         setSearchIsFocused(false)
         setShowSelectDropdown(false)
         setShowSuggestionList(false)
@@ -128,6 +123,20 @@ const FormCombobox = ({
     [input, onBlur]
   )
 
+  const handleScroll = (event) => {
+    if (comboboxRef.current.contains(event.target)) return
+
+    if (
+      !event.target.closest('.pop-up-dialog') &&
+      !event.target.classList.contains('form-field-combobox')
+    ) {
+      setShowValidationRules(false)
+      setShowSelectDropdown(false)
+      setShowSuggestionList(false)
+      inputRef.current.blur()
+    }
+  }
+
   useEffect(() => {
     window.addEventListener('click', handleOutsideClick)
 
@@ -135,6 +144,15 @@ const FormCombobox = ({
       window.removeEventListener('click', handleOutsideClick)
     }
   }, [handleOutsideClick])
+
+  useEffect(() => {
+    if (showValidationRules || showSelectDropdown || showSuggestionList) {
+      window.addEventListener('scroll', handleScroll, true)
+    }
+    return () => {
+      window.removeEventListener('scroll', handleScroll, true)
+    }
+  }, [showSelectDropdown, showSuggestionList, showValidationRules])
 
   const getValidationRules = () => {
     return validationRules.map(({ isValid = false, label, name }) => {
@@ -351,6 +369,7 @@ const FormCombobox = ({
             </div>
             <input
               className={inputClassNames}
+              id={input.name}
               onChange={handleInputChange}
               onFocus={inputOnFocus}
               placeholder={inputPlaceholder}
