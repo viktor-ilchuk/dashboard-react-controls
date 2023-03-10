@@ -14,7 +14,7 @@ illegal under applicable law, and the grant of the foregoing license
 under the Apache 2.0 license is conditioned upon your compliance with
 such restriction.
 */
-import React, { useState, useEffect, useCallback, useRef } from 'react'
+import React, { useState, useEffect, useCallback, useRef, useLayoutEffect } from 'react'
 import PropTypes from 'prop-types'
 import classNames from 'classnames'
 import { Field, useField } from 'react-final-form'
@@ -53,9 +53,14 @@ const FormSelect = ({
   const [isInvalid, setIsInvalid] = useState(false)
   const [isConfirmDialogOpen, setConfirmDialogOpen] = useState(false)
   const [isOpen, setOpen] = useState(false)
+  const [position, setPosition] = useState('bottom-right')
   const [searchValue, setSearchValue] = useState('')
   const selectRef = useRef()
-  const { width: dropdownWidth } = selectRef?.current?.getBoundingClientRect() || {}
+  const popUpRef = useRef()
+  const {
+    width: selectWidth,
+    left: selectLeft,
+  } = selectRef?.current?.getBoundingClientRect() || {}
 
   const selectWrapperClassNames = classNames(
     'form-field__wrapper',
@@ -130,6 +135,16 @@ const FormSelect = ({
     [closeMenu]
   )
 
+  useLayoutEffect(() => {
+    if (popUpRef?.current) {
+      const { width } = popUpRef.current.getBoundingClientRect()
+
+      selectLeft + width > window.innerWidth
+        ? setPosition('bottom-left')
+        : setPosition('bottom-right')
+    }
+  }, [isOpen, selectLeft])
+
   useEffect(() => {
     if (isOpen) {
       window.addEventListener('scroll', handleScroll, true)
@@ -186,7 +201,11 @@ const FormSelect = ({
   return (
     <Field name={name} validate={validateField}>
       {({ input, meta }) => (
-        <Tooltip className="select-tooltip" template={<TextTooltipTemplate text={tooltip} />} hidden={!tooltip}>
+        <Tooltip
+          className="select-tooltip"
+          template={<TextTooltipTemplate text={tooltip} />}
+          hidden={!tooltip}
+        >
           <div
             data-testid="select"
             ref={selectRef}
@@ -267,11 +286,15 @@ const FormSelect = ({
               <PopUpDialog
                 className="form-field form-field-select__options-list"
                 headerIsHidden
+                ref={popUpRef}
                 customPosition={{
                   element: selectRef,
-                  position: 'bottom-right'
+                  position
                 }}
-                style={{ width: `${dropdownWidth}px` }}
+                style={{
+                  maxWidth: `${selectWidth < 500 ? 500 : selectWidth}px`,
+                  minWidth: `${selectWidth}px`
+                }}
               >
                 <div
                   data-testid="select-body"
