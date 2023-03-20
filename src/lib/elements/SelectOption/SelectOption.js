@@ -51,15 +51,17 @@ const SelectOption = ({ item, name, onClick, multiple, selectedId, withSelectedI
         !item.disabled && onClick(item.id)
       }}
     >
-      <div className="data-ellipsis label-row">
-        <div className="select__item-label">
+      <div className="label-row">
+        <div className="data-ellipsis select__item-label">
           {item.icon && (
             <span data-testid="select-icon" className="select__item-icon">
               {item.icon}
             </span>
           )}
           {item.status && <span className={`state-${item.status}-job status`} />}
-          <span>{item.label}</span>
+          <Tooltip template={<TextTooltipTemplate text={item.label} />}>
+            {item.label}
+          </Tooltip>
         </div>
         {withSelectedIcon && item.id === selectedId && <Checkmark className="checkmark" />}
       </div>

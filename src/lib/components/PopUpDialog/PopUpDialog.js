@@ -28,92 +28,98 @@ import { ReactComponent as CloseIcon } from '../../images/close.svg'
 
 import './popUpDialog.scss'
 
-const PopUpDialog = ({
-  children,
-  className,
-  closePopUp,
-  customPosition,
-  headerIsHidden,
-  headerText,
-  style,
-  tooltipText
-}) => {
-  const popUpOverlayRef = useRef(null)
-  const popUpClassNames = classnames(
-    className,
-    'pop-up-dialog__overlay',
-    customPosition.element && 'custom-position'
-  )
+const PopUpDialog = React.forwardRef(
+  (
+    {
+      children,
+      className,
+      closePopUp,
+      customPosition,
+      headerIsHidden,
+      headerText,
+      style,
+      tooltipText
+    },
+    ref
+  ) => {
+    const popUpOverlayRef = useRef(null)
+    ref ??= popUpOverlayRef
+    const popUpClassNames = classnames(
+      className,
+      'pop-up-dialog__overlay',
+      customPosition.element && 'custom-position'
+    )
 
-  const calculateCustomPopUpPosition = useCallback(() => {
-    if (customPosition && customPosition.element) {
-      const elementRect = customPosition.element.current.getBoundingClientRect()
-      const popUpRect = popUpOverlayRef.current.getBoundingClientRect()
-      const [verticalPosition, horizontalPosition] = customPosition.position.split('-')
-      const leftPosition =
-        horizontalPosition === 'left' ? elementRect.right - popUpRect.width : elementRect.left
-      let topPosition
+    const calculateCustomPopUpPosition = useCallback(() => {
+      if (customPosition && customPosition.element) {
+        const elementRect = customPosition.element.current.getBoundingClientRect()
+        const popUpRect = ref?.current.getBoundingClientRect()
+        const [verticalPosition, horizontalPosition] = customPosition.position.split('-')
+        const leftPosition =
+          horizontalPosition === 'left' ? elementRect.right - popUpRect.width : elementRect.left
+        let topPosition
 
-      if (verticalPosition === 'top') {
-        topPosition =
-          elementRect.top > popUpRect.height ? elementRect.top - popUpRect.height - 5 : 5
-      } else {
-        topPosition =
-          popUpRect.height + elementRect.bottom > window.innerHeight
-            ? window.innerHeight - popUpRect.height - 5
-            : elementRect.bottom + 5
+        if (verticalPosition === 'top') {
+          topPosition =
+            elementRect.top > popUpRect.height ? elementRect.top - popUpRect.height - 5 : 5
+        } else {
+          topPosition =
+            popUpRect.height + elementRect.bottom > window.innerHeight
+              ? window.innerHeight - popUpRect.height - 5
+              : elementRect.bottom + 5
+        }
+
+        ref.current.style.top = `${topPosition}px`
+
+        if (style.left) {
+          ref.current.style.left = `calc(${leftPosition}px + ${style.left})`
+        } else {
+          ref.current.style.left = `${leftPosition}px`
+        }
       }
+    }, [customPosition, style.left, ref])
 
-      popUpOverlayRef.current.style.top = `${topPosition}px`
+    useLayoutEffect(() => {
+      calculateCustomPopUpPosition()
+    }, [calculateCustomPopUpPosition])
 
-      if (style.left) {
-        popUpOverlayRef.current.style.left = `calc(${leftPosition}px + ${style.left})`
-      } else {
-        popUpOverlayRef.current.style.left = `${leftPosition}px`
+    useEffect(() => {
+      window.addEventListener('resize', calculateCustomPopUpPosition)
+
+      return () => {
+        window.removeEventListener('resize', calculateCustomPopUpPosition)
       }
-    }
-  }, [customPosition, style.left])
+    })
 
-  useLayoutEffect(() => {
-    calculateCustomPopUpPosition()
-  }, [calculateCustomPopUpPosition])
-
-  useEffect(() => {
-    window.addEventListener('resize', calculateCustomPopUpPosition)
-
-    return () => {
-      window.removeEventListener('resize', calculateCustomPopUpPosition)
-    }
-  })
-
-  return createPortal(
-    <div ref={popUpOverlayRef} className={popUpClassNames} style={style}>
-      <div data-testid="pop-up-dialog" className="pop-up-dialog">
-        {!headerIsHidden && (
-          <div className="pop-up-dialog__header">
-            {headerText && (
-              <div data-testid="pop-up-dialog-header" className="pop-up-dialog__header-text">
-                <Tooltip template={<TextTooltipTemplate text={tooltipText || headerText} />}>
-                  <span>{headerText}</span>
-                </Tooltip>
-              </div>
-            )}
-            <RoundedIcon
-              className="pop-up-dialog__btn_close"
-              onClick={closePopUp}
-              tooltipText="Close"
-              data-testid="pop-up-close-btn"
-            >
-              <CloseIcon />
-            </RoundedIcon>
-          </div>
-        )}
-        {children}
-      </div>
-    </div>,
-    document.getElementById('overlay_container')
-  )
-}
+    return createPortal(
+      <div ref={ref} className={popUpClassNames} style={style}>
+        <div data-testid="pop-up-dialog" className="pop-up-dialog">
+          {!headerIsHidden && (
+            <div className="pop-up-dialog__header">
+              {headerText && (
+                <div data-testid="pop-up-dialog-header" className="pop-up-dialog__header-text">
+                  <Tooltip template={<TextTooltipTemplate text={tooltipText || headerText} />}>
+                    <span>{headerText}</span>
+                  </Tooltip>
+                </div>
+              )}
+              <RoundedIcon
+                className="pop-up-dialog__btn_close"
+                onClick={closePopUp}
+                tooltipText="Close"
+                data-testid="pop-up-close-btn"
+              >
+                <CloseIcon />
+              </RoundedIcon>
+            </div>
+          )}
+          {children}
+        </div>
+      </div>,
+      document.getElementById('overlay_container')
+    )
+  }
+)
 
 PopUpDialog.defaultProps = {
   className: '',
