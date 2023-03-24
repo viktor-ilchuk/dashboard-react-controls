@@ -362,7 +362,7 @@ const FormInput = React.forwardRef(
                   })}
                 </ul>
               )}
-              {!isEmpty(validationRules) && (
+              {!isEmpty(validationRules) && typedValue && (
                 <OptionsMenu show={showValidationRules} ref={ref}>
                   {getValidationRules()}
                 </OptionsMenu>
