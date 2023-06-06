@@ -16,6 +16,7 @@ such restriction.
 */
 import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react'
 import lodash, { get, isEmpty, set, isNil } from 'lodash'
+import classnames from 'classnames'
 import PropTypes from 'prop-types'
 
 import FormChipCellView from './FormChipCellView'
@@ -32,6 +33,7 @@ import './formChipCell.scss'
 
 const FormChipCell = ({
   chipOptions,
+  className,
   delimiter,
   formState,
   initialValues,
@@ -44,6 +46,8 @@ const FormChipCell = ({
   validator,
   visibleChipsMaxLength
 }) => {
+  const chipsClassName = classnames('chips', className)
+
   const [chipsSizes, setChipsSizes] = useState({})
   const [showHiddenChips, setShowHiddenChips] = useState(false)
   const [editConfig, setEditConfig] = useState({
@@ -333,7 +337,7 @@ const FormChipCell = ({
   }
 
   return (
-    <div className="chips">
+    <div className={chipsClassName}>
       {label && <div className="chips__label">{label}</div>}
       <div className={label ? 'chips__wrapper' : ''}>
         <FormChipCellView
@@ -370,6 +374,7 @@ FormChipCell.defaultProps = {
     density: 'dense',
     font: 'purple'
   },
+  className: '',
   delimiter: null,
   isEditable: false,
   label: null,
@@ -382,6 +387,7 @@ FormChipCell.defaultProps = {
 
 FormChipCell.propTypes = {
   chipOptions: CHIP_OPTIONS,
+  className: PropTypes.string,
   delimiter: PropTypes.oneOfType([PropTypes.string, PropTypes.element]),
   formState: PropTypes.shape({}).isRequired,
   initialValues: PropTypes.object.isRequired,
