@@ -14,7 +14,7 @@ illegal under applicable law, and the grant of the foregoing license
 under the Apache 2.0 license is conditioned upon your compliance with
 such restriction.
 */
-import React, { useState, useEffect, useCallback, useRef, useLayoutEffect } from 'react'
+import React, { useState, useEffect, useCallback, useMemo, useRef, useLayoutEffect } from 'react'
 import PropTypes from 'prop-types'
 import classNames from 'classnames'
 import { Field, useField } from 'react-final-form'
@@ -45,6 +45,7 @@ const FormSelect = ({
   required,
   search,
   selectedItemAction,
+  scrollToView,
   tooltip,
   withoutBorder,
   withSelectedIcon
@@ -52,15 +53,14 @@ const FormSelect = ({
   const { input, meta } = useField(name)
   const [isInvalid, setIsInvalid] = useState(false)
   const [isConfirmDialogOpen, setConfirmDialogOpen] = useState(false)
-  const [isOpen, setOpen] = useState(false)
+  const [isOpen, setIsOpen] = useState(false)
   const [position, setPosition] = useState('bottom-right')
   const [searchValue, setSearchValue] = useState('')
-  const selectRef = useRef()
+  const optionsListRef = useRef()
   const popUpRef = useRef()
-  const {
-    width: selectWidth,
-    left: selectLeft,
-  } = selectRef?.current?.getBoundingClientRect() || {}
+  const selectRef = useRef()
+  const searchRef = useRef()
+  const { width: selectWidth, left: selectLeft } = selectRef?.current?.getBoundingClientRect() || {}
 
   const selectWrapperClassNames = classNames(
     'form-field__wrapper',
@@ -82,6 +82,33 @@ const FormSelect = ({
   )
 
   const selectedOption = options.find((option) => option.id === input.value)
+
+  const getFilteredOptions = useCallback(
+    (options) => {
+      return options.filter((option) => {
+        return !search || option.label.toLowerCase().includes(searchValue.toLowerCase())
+      })
+    },
+    [search, searchValue]
+  )
+
+  const sortedOptionsList = useMemo(() => {
+    if (scrollToView) {
+      return getFilteredOptions(options)
+    }
+
+    const optionsList = [...options]
+
+    const selectedOption = optionsList.filter((option, idx, arr) => {
+      if (option.id === input.value) {
+        arr.splice(idx, 1)
+        return true
+      }
+      return false
+    })
+
+    return getFilteredOptions([...selectedOption, ...optionsList])
+  }, [input.value, getFilteredOptions, options, scrollToView])
 
   const getSelectValue = () => {
     if (!input.value || !input.value.length) {
@@ -105,14 +132,14 @@ const FormSelect = ({
 
   const openMenu = useCallback(() => {
     if (!isOpen) {
-      setOpen(true)
+      setIsOpen(true)
       input.onFocus(new Event('focus'))
     }
   }, [input, isOpen])
 
   const closeMenu = useCallback(() => {
     if (isOpen) {
-      setOpen(false)
+      setIsOpen(false)
       input.onBlur(new Event('blur'))
     }
   }, [input, isOpen])
@@ -158,6 +185,31 @@ const FormSelect = ({
     }
   }, [clickHandler, handleScroll, isOpen])
 
+  const scrollOptionToView = useCallback(() => {
+    const selectedOptionEl = optionsListRef.current.querySelector(`#${input.value}`)
+
+    searchValue
+      ? optionsListRef.current.scrollTo({ top: 0, left: 0, behavior: 'smooth' })
+      : setTimeout(() => {
+          selectedOptionEl.scrollIntoView({
+            behavior: 'smooth',
+            block: 'center'
+          })
+        }, 0)
+  }, [input.value, searchValue])
+
+  useEffect(() => {
+    if (isOpen && optionsListRef.current && scrollToView) {
+      scrollOptionToView()
+    }
+  }, [isOpen, scrollOptionToView, scrollToView])
+
+  useEffect(() => {
+    if (isOpen && search && searchRef.current) {
+      searchRef.current.focus()
+    }
+  }, [isOpen, search])
+
   const toggleOpen = () => {
     if (isOpen) {
       closeMenu()
@@ -181,7 +233,7 @@ const FormSelect = ({
     [closeMenu, multiple]
   )
 
-  const handleSelectOptionClick = (selectedOption, option) => {
+  const handleSelectOptionClick = (selectedOption, option, ref) => {
     if (selectedOption !== input.value) {
       option.handler && option.handler()
       onChange && onChange(selectedOption)
@@ -308,16 +360,13 @@ const FormSelect = ({
                         placeholder="Search..."
                         value={searchValue}
                         onChange={(event) => setSearchValue(event.target.value)}
+                        ref={searchRef}
+                        autoFocus
                       />
                     </div>
                   )}
-                  {options
-                    .filter((option) => {
-                      return (
-                        !search || option.label.toLowerCase().includes(searchValue.toLowerCase())
-                      )
-                    })
-                    .map((option) => {
+                  <ul className="options-list" ref={optionsListRef}>
+                    {sortedOptionsList.map((option) => {
                       return (
                         <SelectOption
                           item={option}
@@ -332,6 +381,7 @@ const FormSelect = ({
                         />
                       )
                     })}
+                  </ul>
                 </div>
               </PopUpDialog>
             )}
@@ -353,6 +403,7 @@ FormSelect.defaultProps = {
   search: false,
   tooltip: '',
   multiple: false,
+  scrollToView: true,
   withoutBorder: false,
   withSelectedIcon: true
 }
@@ -369,6 +420,7 @@ FormSelect.propTypes = {
   search: PropTypes.bool,
   tooltip: PropTypes.string,
   multiple: PropTypes.bool,
+  scrollToView: PropTypes.bool,
   withoutBorder: PropTypes.bool,
   withSelectedIcon: PropTypes.bool
 }
