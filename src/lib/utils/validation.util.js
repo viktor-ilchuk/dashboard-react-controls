@@ -88,6 +88,14 @@ export const checkPatternsValidity = (validationRules, value = '', required = tr
       : validationRules
           .filter((rule) => !rule.async)
           .map((rule) => {
+            if (rule.name === 'validCharactersWithPrefix') {
+              const keyWithPrefix = value.split('/')[1]
+
+              if (keyWithPrefix) {
+                value = keyWithPrefix
+              }
+            }
+
             return {
               ...rule,
               isValid: lodash.isFunction(rule.pattern)
@@ -174,6 +182,13 @@ const generateRule = {
   validCharacters: (chars) => {
     return {
       name: 'validCharacters',
+      label: ValidationConstants.VALID_CHARACTERS + ': ' + convertToLabel(chars),
+      pattern: new RegExp('^[' + convertToPattern(chars) + ']+$')
+    }
+  },
+  validCharactersExceptPrefix: (chars) => {
+    return {
+      name: 'validCharactersWithPrefix',
       label: ValidationConstants.VALID_CHARACTERS + ': ' + convertToLabel(chars),
       pattern: new RegExp('^[' + convertToPattern(chars) + ']+$')
     }
@@ -330,6 +345,13 @@ const validationRules = {
       generateRule.validCharacters('a-z A-Z 0-9 - _ .'),
       generateRule.beginNotWith('.'),
       generateRule.length({ max: 253 })
+    ]
+  },
+  jobWizard: {
+    label: [
+      generateRule.validCharactersExceptPrefix('a-z A-Z 0-9 - _ .'),
+      generateRule.beginEndWith('a-z A-Z 0-9'),
+      generateRule.length({ max: 56 })
     ]
   }
 }
